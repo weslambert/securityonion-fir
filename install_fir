@@ -1,0 +1,77 @@
+#!/bin/bash
+. /usr/sbin/so-common
+
+# Clone repo
+header "Cloning repo..."
+[ -d ~/securityonion-fir ] && rm -rf ~/securityonion-fir
+git clone https://github.com/weslambert/securityonion-fir
+
+# Create FIR dir
+[ -d ~/fir ] && rm -rf ~/fir
+mkdir ~/fir
+
+header "Copying web config..."
+cp -av securityonion-fir/fir.conf /etc/apache2/sites-available/fir.conf
+echo
+
+# Enable FIR site
+header "Enabling site..."
+a2ensite grr.conf
+echo
+
+# Restart Apache
+header "Restarting Apache..."
+echo
+service apache2 restart
+  
+# Pull Docker container
+header "Pulling container from Docker Hub..."
+docker pull wlambert/so-fir && \
+echo
+
+# Run Docker container
+header "Starting Docker container..."
+if docker ps -a | grep so-fir > /dev/null; then
+        docker stop so-fir
+        docker ps -a | grep "so-fir" | awk '{print $1}' | xargs docker rm
+fi
+docker run -it -d --name=so-fir -p 8001:8001 wlambert/so-fir && \
+echo
+
+# Copy DB to store locally
+echo "Copying DB file(s).."
+echo
+docker cp so-fir:/app/FIR/db.sqlite3 ~/fir/db.sqlite3 && \
+chown 1000:1000 ~/fir/db.sqlite3
+
+# Stop container
+header "Stopping container to re-apply new config..."
+if docker ps -a | grep so-fir > /dev/null; then
+	echo "Stopping container..."
+	docker stop so-fir
+	echo
+	echo "Removing container..."
+	docker ps -a | grep "so-fir" | awk '{print $1}' | xargs docker rm
+	echo
+fi
+echo
+
+# Run container again, mounting with DB hosted locally
+header "Starting container..."
+docker run -it -d --name=so-fir -p 8001:8001 -v ~/fir/db.sqlite3:/app/FIR/db.sqlite3 wlambert/so-fir && \
+echo
+
+# Add inital BLs/users
+header "Configuring initial user(s)/config..."
+docker exec -it so-fir ./manage.py loaddata incidents/fixtures/seed_data.json && \
+docker exec -it so-fir ./manage.py loaddata incidents/fixtures/dev_users.json
+echo
+
+# Done
+header "Configuration Complete"
+echo "Done!"
+echo
+echo "FIR should now be accesible at https://localhost/fir"
+echo
+echo "If you haven't already, make sure to run so-allow to allow an analyst access to port 443 to access FIR and other tools."
+echo
