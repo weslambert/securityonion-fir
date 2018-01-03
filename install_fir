@@ -71,7 +71,7 @@ echo
 header "Configuration Complete"
 echo "Done!"
 echo
-echo "FIR should now be accesible at https://localhost/fir"
+echo "FIR should now be accessible at https://localhost/fir"
 echo
 echo "If you haven't already, make sure to run so-allow to allow an analyst access to port 443 to access FIR and other tools."
 echo
