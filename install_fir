@@ -16,7 +16,7 @@ echo
 
 # Enable FIR site
 header "Enabling site..."
-a2ensite grr.conf
+a2ensite fir.conf
 echo
 
 # Restart Apache
