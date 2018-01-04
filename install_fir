@@ -72,7 +72,7 @@ echo
 
 # Run container again, mounting with DB hosted locally
 header "Starting container..."
-docker run -it -d --name=so-fir -p 8001:8001 -v ~/fir/db.sqlite3:/app/FIR/db.sqlite3 wlambert/so-fir && \
+docker run -dit --name=so-fir --restart unless-stopped -p 8001:8001 -v ~/fir/db.sqlite3:/app/FIR/db.sqlite3 wlambert/so-fir && \
 echo
 
 # Add inital BLs/users
@@ -88,6 +88,9 @@ echo
 echo "FIR should now be accessible at https://$DOMAIN_NAME"
 echo
 echo "If you haven't already, make sure to run so-allow to allow an analyst access to port 443 to access FIR and other tools."
-echo "Also keep in mind, if DNS is not in place for the provided domain, you will need to access the site by placing an entry in the client's host(s) file:"
+echo
+echo "Also keep in mind, if DNS configuration is not in place for the provided domain, you will"
+echo "need to place an entry in the client's host(s) file:"
+echo
 echo "Ex: 127.0.0.1    $DOMAIN_NAME"
 echo
